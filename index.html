@@ -231,28 +231,24 @@
         }
 
         function renderAll() {
-            // Render Tasks
             const tList = document.getElementById('tasksList');
             tList.innerHTML = '';
             appData.tasks.forEach((t, idx) => {
                 tList.innerHTML += `<div class="tag-item"><span>📌 ${t.text}</span> <i class="fa-solid fa-xmark" onclick="removeTask(${idx})"></i></div>`;
             });
 
-            // Render News
             const nList = document.getElementById('newsList');
             nList.innerHTML = '';
             appData.news.forEach((n, idx) => {
                 nList.innerHTML += `<div class="tag-item"><span>⚡ ${n.text}</span> <i class="fa-solid fa-xmark" onclick="removeNews(${idx})"></i></div>`;
             });
 
-            // Render Interests
             const iList = document.getElementById('interestsList');
             iList.innerHTML = '';
             appData.interests.forEach((item, idx) => {
                 iList.innerHTML += `<div class="tag-item"><span>🎯 ${item}</span> <i class="fa-solid fa-xmark" onclick="removeInterest(${idx})"></i></div>`;
             });
 
-            // Render API Key input
             if(appData.apiKey) {
                 document.getElementById('apiKeyInput').value = appData.apiKey;
             }
@@ -281,28 +277,30 @@
                 return "من فضلك ادخل Gemini API Key الأول في صفحة الإعدادات عشان أقدر أرد عليك بالذكاء الاصطناعي!";
             }
 
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${appData.apiKey}`;
-            const systemContext = `أنت IRIS، المساعد الشخصي الذكي الخاص بيوسف. تتحدث باللغة العربية بأسلوب صديق ذكي ومختصر ومباشر.`;
-
+            const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${appData.apiKey}`;
+            
             try {
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         contents: [{
-                            parts: [{ text: `${systemContext}\n\nUser: ${userPrompt}` }]
+                            parts: [{ text: userPrompt }]
                         }]
                     })
                 });
 
                 const data = await response.json();
-                if (data.candidates && data.candidates[0].content.parts[0].text) {
+                
+                if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts[0].text) {
                     return data.candidates[0].content.parts[0].text;
+                } else if (data.error) {
+                    return `خطأ من قِبل جوجل: ${data.error.message}`;
                 } else {
-                    return "عذراً، حدثت مشكلة في الاستجابة من الذكاء الاصطناعي.";
+                    return "عذراً، لم أتمكن من قراءة الرد. تأكد من صحة المفتاح.";
                 }
             } catch (err) {
-                return "تعذر الاتصال بالذكاء الاصطناعي. تأكد من صحة الـ API Key وجودة الاتصال.";
+                return "تعذر الاتصال بالذكاء الاصطناعي. تأكد من جودة الإنترنت.";
             }
         }
 
@@ -311,17 +309,14 @@
             const text = input.value.trim();
             if (!text) return;
 
-            // حفظ وإظهار رسالة المستخدم
             appData.messages.push({ sender: 'outgoing', text: text });
             saveToLocalStorage();
             renderChat();
             input.value = '';
 
-            // إظهار رسالة جاري التفكير
             appData.messages.push({ sender: 'incoming', text: 'جاري التفكير...' });
             renderChat();
 
-            // الأتمتة المحلية للمهام
             const lower = text.toLowerCase();
             if (lower.includes('فيلم') || lower.includes('تذكرة') || lower.includes('حجز')) {
                 appData.tasks.push({ id: Date.now(), text: `حجز تذكرة: ${text}` });
@@ -329,10 +324,8 @@
                 appData.news.push({ id: Date.now(), text: `متابعة: ${text}` });
             }
 
-            // جلب الرد من Gemini
             const aiReply = await fetchGeminiResponse(text);
             
-            // استبدال رسالة التفكير بالرد الحقيقي
             appData.messages.pop();
             appData.messages.push({ sender: 'incoming', text: aiReply });
             saveToLocalStorage();
@@ -370,12 +363,4 @@
         }
 
         function removeTask(idx) { appData.tasks.splice(idx, 1); saveToLocalStorage(); renderAll(); }
-        function removeNews(idx) { appData.news.splice(idx, 1); saveToLocalStorage(); renderAll(); }
-        function removeInterest(idx) { appData.interests.splice(idx, 1); saveToLocalStorage(); renderAll(); }
-
-        function handleChatKey(e) { if (e.key === 'Enter') sendMessage(); }
-
-        renderAll();
-    </script>
-</body>
-</html>
+        function removeNews(idx) { appData.news.splice(idx, 1); saveToLocalStorage(); renderAll();

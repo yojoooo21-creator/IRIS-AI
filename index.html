@@ -2,119 +2,70 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IRIS - AI Companion</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; }
-        body { background-color: #05050a; color: #fff; min-height: 100vh; display: flex; justify-content: center; align-items: center; }
+        body { background-color: #05050a; color: #fff; padding: 15px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 430px; display: flex; flex-direction: column; gap: 20px; padding-bottom: 50px; }
         
-        .app-container {
-            width: 100%; max-width: 430px; height: 100vh;
-            background: #0a0f1d; display: flex; flex-direction: column; position: relative; overflow: hidden;
-        }
-
-        .view { flex: 1; display: none; flex-direction: column; padding: 20px; padding-bottom: 90px; overflow-y: auto; }
-        .view.active { display: flex; }
-
-        .header { font-size: 20px; font-weight: 700; margin-bottom: 15px; color: #00f2fe; text-align: center; }
+        .card { background: #0a0f1d; border: 1px solid rgba(0,242,254,0.3); border-radius: 16px; padding: 18px; box-shadow: 0 0 15px rgba(0,242,254,0.1); }
+        .title { font-size: 16px; font-weight: 700; color: #00f2fe; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
         
-        .card { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid rgba(0,242,254,0.2); }
-        
-        .chat-body { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 10px; }
-        .msg { max-width: 80%; padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.4; }
+        .chat-box { height: 250px; background: #030508; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); padding: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+        .msg { max-width: 85%; padding: 8px 12px; border-radius: 10px; font-size: 12px; line-height: 1.4; }
         .msg.incoming { background: #191e30; align-self: flex-start; }
         .msg.outgoing { background: #0072ff; color: #fff; align-self: flex-end; }
 
-        .input-area {
-            position: absolute; bottom: 75px; left: 0; width: 100%; padding: 10px;
-            background: #080b14; display: flex; gap: 8px; border-top: 1px solid rgba(255,255,255,0.1);
-        }
-        .input-area input {
-            flex: 1; background: rgba(255,255,255,0.08); border: none; border-radius: 20px;
-            padding: 10px 15px; color: #fff; outline: none; font-size: 13px;
-        }
-        .input-area button {
-            background: #00f2fe; border: none; width: 38px; height: 38px; border-radius: 50%;
-            color: #05050a; cursor: pointer; display: flex; justify-content: center; align-items: center;
-        }
-
-        .bottom-nav {
-            position: absolute; bottom: 0; left: 0; width: 100%; height: 70px;
-            background: #080b14; border-top: 1px solid rgba(255,255,255,0.1);
-            display: flex; justify-content: space-around; align-items: center; z-index: 10;
-        }
-        .nav-btn { background: none; border: none; color: #94a3b8; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; font-size: 11px; }
-        .nav-btn.active { color: #00f2fe; }
-        .nav-btn i { font-size: 16px; }
-
-        .form-control { width: 100%; padding: 10px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: #fff; margin-bottom: 10px; font-size: 13px; outline: none; }
-        .btn-main { width: 100%; padding: 10px; background: #00f2fe; border: none; border-radius: 8px; color: #05050a; font-weight: 700; cursor: pointer; }
+        .input-group { display: flex; gap: 8px; }
+        input, button { padding: 10px 14px; border-radius: 10px; font-size: 13px; outline: none; }
+        input { flex: 1; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #fff; }
+        button { background: #00f2fe; border: none; color: #05050a; font-weight: 700; cursor: pointer; }
     </style>
 </head>
 <body>
-    <div class="app-container">
-        <!-- الرئيسية -->
-        <div id="home" class="view active">
-            <div class="header">مرحباً بك يا يوسف</div>
-            <div class="card" style="text-align: center;">
-                <p style="color: #00f2fe; font-weight: 600; margin-bottom: 5px;">IRIS AI Assistant</p>
-                <p style="font-size: 12px; color: #94a3b8;">التطبيق يعمل بنجاح ومحلياً على جهازك.</p>
-            </div>
-            <div class="card" onclick="changeTab('chat', document.querySelectorAll('.nav-btn')[1])" style="cursor: pointer;">
-                <i class="fa-solid fa-comments" style="color: #00f2fe;"></i> ابدأ المحادثة الذكية
-            </div>
-            <div class="card" onclick="changeTab('settings', document.querySelectorAll('.nav-btn')[2])" style="cursor: pointer;">
-                <i class="fa-solid fa-key" style="color: #00f2fe;"></i> إعدادات الـ API Key
+    <div class="container">
+        <!-- قسم الترحيب -->
+        <div class="card" style="text-align: center;">
+            <h2 style="color: #00f2fe; margin-bottom: 5px;">IRIS AI Assistant</h2>
+            <p style="font-size: 12px; color: #94a3b8;">المساعد الشخصي الذكي (نسخة مستقرة)</p>
+        </div>
+
+        <!-- إعدادات المفتاح -->
+        <div class="card">
+            <div class="title"><i class="fa-solid fa-key"></i> إعدادات الـ API Key</div>
+            <div class="input-group">
+                <input type="password" id="apiKey" placeholder="أدخل مفتاح Gemini هنا...">
+                <button onclick="saveKey()">حفظ</button>
             </div>
         </div>
 
         <!-- الشات -->
-        <div id="chat" class="view" style="padding-bottom: 130px;">
-            <div class="header">محادثة IRIS</div>
-            <div class="chat-body" id="chatBody">
-                <div class="msg incoming">أهلاً يا يوسف! أنا جاهزة للرد عليك. أدخل مفتاح الـ API في الإعدادات واكتب لي سؤالك.</div>
+        <div class="card">
+            <div class="title"><i class="fa-solid fa-comments"></i> المحادثة الذكية</div>
+            <div class="chat-box" id="chatBox">
+                <div class="msg incoming">أهلاً يا يوسف! أدخل مفتاح الـ API فوق واكتب سؤالك بالأسفل.</div>
             </div>
-            <div class="input-area">
-                <input type="text" id="chatInput" placeholder="اكتب رسالتك هنا..." onkeypress="if(event.key==='Enter') sendMsg()">
+            <div class="input-group">
+                <input type="text" id="chatInput" placeholder="اكتب رسالتك..." onkeypress="if(event.key==='Enter') sendMsg()">
                 <button onclick="sendMsg()"><i class="fa-solid fa-paper-plane"></i></button>
             </div>
         </div>
-
-        <!-- الإعدادات -->
-        <div id="settings" class="view">
-            <div class="header">الإعدادات</div>
-            <p style="font-size: 12px; color: #94a3b8; margin-bottom: 8px;">أدخل مفتاح Gemini API هنا:</p>
-            <input type="password" id="apiKey" class="form-control" placeholder="الصق المفتاح هنا...">
-            <button class="btn-main" onclick="saveKey()">حفظ المفتاح</button>
-        </div>
-
-        <!-- شريط التنقل السفلي -->
-        <nav class="bottom-nav">
-            <button class="nav-btn active" onclick="changeTab('home', this)"><i class="fa-solid fa-home"><span>الرئيسية</span></i></button>
-            <button class="nav-btn" onclick="changeTab('chat', this)"><i class="fa-solid fa-comments"><span>الشات</span></i></button>
-            <button class="nav-btn" onclick="changeTab('settings', this)"><i class="fa-solid fa-gear"><span>الإعدادات</span></i></button>
-        </nav>
     </div>
 
     <script>
-        // استرجاع البيانات المخزنة
+        // تحميل المفتاح القديم إن وجد
         let savedKey = localStorage.getItem('iris_key') || '';
-        if(savedKey) document.getElementById('apiKey').value = savedKey;
-
-        function changeTab(tabId, btn) {
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            if(btn) btn.classList.add('active');
+        if(savedKey) {
+            document.getElementById('apiKey').value = savedKey;
         }
 
         function saveKey() {
             let key = document.getElementById('apiKey').value.trim();
             localStorage.setItem('iris_key', key);
-            alert('تم حفظ المفتاح بنجاح!');
+            alert('تم حفظ المفتاح محلياً بنجاح!');
         }
 
         async function sendMsg() {
@@ -122,20 +73,20 @@
             let text = input.value.trim();
             if(!text) return;
 
-            let body = document.getElementById('chatBody');
-            body.innerHTML += `<div class="msg outgoing">${text}</div>`;
+            let box = document.getElementById('chatBox');
+            box.innerHTML += `<div class="msg outgoing">${text}</div>`;
             input.value = '';
-            body.scrollTop = body.scrollHeight;
+            box.scrollTop = box.scrollHeight;
 
             let key = localStorage.getItem('iris_key');
             if(!key) {
-                body.innerHTML += `<div class="msg incoming">من فضلك ادخل مفتاح الـ API في صفحة الإعدادات أولاً!</div>`;
-                body.scrollTop = body.scrollHeight;
+                box.innerHTML += `<div class="msg incoming">من فضلك أدخل مفتاح الـ API في خانة الإعدادات بالأعلى أولاً!</div>`;
+                box.scrollTop = box.scrollHeight;
                 return;
             }
 
-            body.innerHTML += `<div class="msg incoming" id="loading">جاري الرد...</div>`;
-            body.scrollTop = body.scrollHeight;
+            box.innerHTML += `<div class="msg incoming" id="loading">جاري الرد...</div>`;
+            box.scrollTop = box.scrollHeight;
 
             try {
                 let res = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${key}`, {
@@ -149,15 +100,17 @@
                 
                 if(data.candidates && data.candidates[0].content.parts[0].text) {
                     let reply = data.candidates[0].content.parts[0].text;
-                    body.innerHTML += `<div class="msg incoming">${reply}</div>`;
+                    box.innerHTML += `<div class="msg incoming">${reply}</div>`;
+                } else if(data.error) {
+                    box.innerHTML += `<div class="msg incoming">خطأ من جوجل: ${data.error.message}</div>`;
                 } else {
-                    body.innerHTML += `<div class="msg incoming">عذراً، حدث خطأ في الاستجابة من جوجل.</div>`;
+                    box.innerHTML += `<div class="msg incoming">عذراً، لم أتمكن من جلب الرد. تأكد من صحة المفتاح.</div>`;
                 }
             } catch(e) {
                 document.getElementById('loading').remove();
-                body.innerHTML += `<div class="msg incoming">فشل الاتصال بالإنترنت أو بالخدمة.</div>`;
+                box.innerHTML += `<div class="msg incoming">فشل الاتصال بالإنترنت.</div>`;
             }
-            body.scrollTop = body.scrollHeight;
+            box.scrollTop = box.scrollHeight;
         }
     </script>
 </body>
